@@ -9,40 +9,7 @@ Config.JewelleryLocation = {
 }
 
 Config.WhitelistedWeapons = {
-    [GetHashKey("weapon_assaultrifle")] = {
-        ["timeOut"] = 10000
-    },
-    [GetHashKey("weapon_carbinerifle")] = {
-        ["timeOut"] = 10000
-    },
-    [GetHashKey("weapon_pumpshotgun")] = {
-        ["timeOut"] = 10000
-    },
-    [GetHashKey("weapon_sawnoffshotgun")] = {
-        ["timeOut"] = 10000
-    },
-    [GetHashKey("weapon_compactrifle")] = {
-        ["timeOut"] = 10000
-    },
-    [GetHashKey("weapon_microsmg")] = {
-        ["timeOut"] = 10000
-    },
-    [GetHashKey("weapon_autoshotgun")] = {
-        ["timeOut"] = 10000
-    },
-    [GetHashKey("weapon_pistol")] = {
-        ["timeOut"] = 10000
-    },
-    [GetHashKey("weapon_pistol_mk2")] = {
-        ["timeOut"] = 10000
-    },
-    [GetHashKey("weapon_combatpistol")] = {
-        ["timeOut"] = 10000
-    },
-    [GetHashKey("weapon_appistol")] = {
-        ["timeOut"] = 10000
-    },
-    [GetHashKey("weapon_pistol50")] = {
+    [GetHashKey("weapon_hammer")] = {
         ["timeOut"] = 10000
     },
 }
