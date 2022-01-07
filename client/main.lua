@@ -2,6 +2,28 @@ local robberyAlert = false
 local isLoggedIn = false
 local firstAlarm = false
 
+local PlayerJob = {}
+
+RegisterNetEvent('QBCore:Client:OnJobUpdate')
+AddEventHandler('QBCore:Client:OnJobUpdate', function(JobInfo)
+    PlayerJob = JobInfo
+    onDuty = true
+end)
+
+RegisterNetEvent("QBCore:Client:OnPlayerLoaded")
+AddEventHandler("QBCore:Client:OnPlayerLoaded", function()
+    PlayerJob = QBCore.Functions.GetPlayerData().job
+    onDuty = true
+end)
+
+Citizen.CreateThread(function()
+    Wait(500)
+    if QBCore.Functions.GetPlayerData() ~= nil then
+        PlayerJob = QBCore.Functions.GetPlayerData().job
+        onDuty = true
+    end
+end)
+
 function DrawText3Ds(x, y, z, text)
 	SetTextScale(0.35, 0.35)
     SetTextFont(4)
@@ -45,7 +67,7 @@ Citizen.CreateThread(function()
 
                             if dist < 0.6 then
                                 if not Config.Locations[case]["isBusy"] and not Config.Locations[case]["isOpened"] then
-                                    DrawText3Ds(Config.Locations[case]["coords"]["x"], Config.Locations[case]["coords"]["y"], Config.Locations[case]["coords"]["z"], '[E] Break the display case')
+                                    DrawText3Ds(Config.Locations[case]["coords"]["x"], Config.Locations[case]["coords"]["y"], Config.Locations[case]["coords"]["z"], '~r~[E]~w~ Break the display case')
                                     if IsControlJustPressed(0, 38) then
                                         QBCore.Functions.TriggerCallback('qb-jewellery:server:getCops', function(cops)
                                             if cops >= Config.RequiredCops then
@@ -133,7 +155,7 @@ function smashVitrine(k)
 
     smashing = true
 
-    QBCore.Functions.Progressbar("smash_vitrine", "Stocking a display", Config.WhitelistedWeapons[pedWeapon]["timeOut"], false, true, {
+    QBCore.Functions.Progressbar("smash_vitrine", "Stealing", Config.WhitelistedWeapons[pedWeapon]["timeOut"], false, true, {
         disableMovement = true,
         disableCarMovement = true,
         disableMouse = false,
@@ -279,4 +301,298 @@ Citizen.CreateThread(function()
     BeginTextCommandSetBlipName("STRING")
     AddTextComponentSubstringPlayerName("Vangelico Jewelry")
     EndTextCommandSetBlipName(Dealer)
+end)
+
+RegisterNetEvent("qb-jewerly:ThermiteFront")
+AddEventHandler("qb-jewerly:ThermiteFront", function()
+    QBCore.Functions.TriggerCallback('qb-jewelery:server:IsDoorBusy', function(isBusy)
+    	QBCore.Functions.TriggerCallback('qb-jewerly:server:get:checkitem', function(HasItems)  
+    		if HasItems then
+                if not isBusy then
+                TriggerServerEvent('QBCore:Server:RemoveItem', "thermite", 1)
+				QBCore.Functions.Progressbar("pickup_sla", "Placing Device", 1200, false, true, {
+					disableMovement = true,
+					disableCarMovement = true,
+					disableMouse = false,
+					disableCombat = true,
+				}, {
+					animDict = "anim@heists@ornate_bank@thermal_charge",
+					anim = "thermal_charge",
+					flags = 8,
+				}, {}, {}, function() -- Done
+                    exports["memorygame_2"]:thermiteminigame(7, 3, 3, 8,
+                    function() -- Success
+                        TriggerServerEvent('nui_doorlock:server:updateState', 9, false, false, false, true)
+                        if math.random(1, 100) <= 35 then
+                         TriggerServerEvent('qb-hud:server:GainStress', math.random(5, 8))
+                        end
+                         QBCore.Functions.Notify("Thermite Successful Door Opened", "success")
+                         local ped = PlayerPedId()
+                         local pos = GetEntityCoords(ped)
+                         local s1, s2 = GetStreetNameAtCoord(pos.x, pos.y, pos.z, Citizen.PointerValueInt(), Citizen.PointerValueInt())
+                         local street1 = GetStreetNameFromHashKey(s1)
+                         local street2 = GetStreetNameFromHashKey(s2)
+                         local streetLabel = street1
+                         if street2 ~= nil then 
+                             streetLabel = streetLabel .. " " .. street2
+                         end
+                         TriggerServerEvent("qb-Jewelry:server:callCops", "Chopshop", 0, streetLabel, pos)
+                         -- Vangelico911Call()
+                         firstAlarm = true
+                         print("success")
+                         copsCalled = true
+                         TriggerServerEvent('qb-jewelery:server:SetThermite')
+                         TriggerServerEvent('qb-jewellery:server:setTimeout')
+                    end,
+                    function() -- Failure
+                        if math.random(1, 100) <= 75 then
+                            TriggerServerEvent('qb-hud:server:GainStress', math.random(8, 15))
+                        end
+                        QBCore.Functions.Notify("You failed!")
+                    end)
+				end, function() --canccel
+					QBCore.Functions.Notify("Cancelled..", "error")
+				end)
+            else
+                QBCore.Functions.Notify("Fuse Already Burned", "error", 4500) 
+            end
+			else
+   				QBCore.Functions.Notify("Missing Something", "error")
+			end
+		end)
+    end)
+end)
+
+RegisterNetEvent("qb-jewerly:KeycardInside")
+AddEventHandler("qb-jewerly:KeycardInside", function()
+    QBCore.Functions.TriggerCallback('qb-jewelery:server:IsKeycardBusy', function(isBusy)
+    	QBCore.Functions.TriggerCallback('qb-jewerly:server:get:checkitemkey', function(HasItems)
+    		if HasItems then
+                if not isBusy then
+                TriggerServerEvent('QBCore:Server:RemoveItem', "security_card_01", 1)
+				QBCore.Functions.Progressbar("pickup_sla", "Swiping", 1500, false, true, {
+					disableMovement = true,
+					disableCarMovement = true,
+					disableMouse = false,
+					disableCombat = true,
+				}, {
+					animDict = "mp_heists@keypad@",
+					anim = "idle_a",
+					flags = 49,
+				}, {}, {}, function() -- Done
+                    exports['varhack']:OpenHackingGame(function(success)
+                        if success then
+                            TriggerServerEvent('nui_doorlock:server:updateState', 10, false, false, false, true)
+                            if math.random(1, 100) <= 35 then
+                             TriggerServerEvent('qb-hud:server:GainStress', math.random(5, 8))
+                            end
+                             QBCore.Functions.Notify("Door Opened", "success")
+                        local ped = PlayerPedId()
+                        local pos = GetEntityCoords(ped)
+                        local s1, s2 = GetStreetNameAtCoord(pos.x, pos.y, pos.z, Citizen.PointerValueInt(), Citizen.PointerValueInt())
+                        local street1 = GetStreetNameFromHashKey(s1)
+                        local street2 = GetStreetNameFromHashKey(s2)
+                        local streetLabel = street1
+                        if street2 ~= nil then 
+                            streetLabel = streetLabel .. " " .. street2
+                        end
+                        TriggerServerEvent("qb-Jewelry:server:callCops", "Chopshop", 0, streetLabel, pos)
+                        -- Vangelico911Call()
+                        firstAlarm = true
+                        print("success")
+                        copsCalled = true
+                        TriggerServerEvent('qb-jewelery:server:SetKeycard')
+                        else
+                            if math.random(1, 100) <= 75 then
+                                TriggerServerEvent('qb-hud:server:GainStress', math.random(8, 15))
+                            end
+                            QBCore.Functions.Notify("You failed!")
+                        end
+                    end, 5, 5)
+				end, function() --canccel
+					QBCore.Functions.Notify("Cancelled..", "error")
+				end)
+            else
+                QBCore.Functions.Notify("Security Lock Active", "error", 4500) 
+            end
+			else
+   				QBCore.Functions.Notify("Missing Something", "error")
+			end
+		end)
+    end)
+end)
+
+RegisterNetEvent("qb-jewerly:HackLaptop")
+AddEventHandler("qb-jewerly:HackLaptop", function()
+    QBCore.Functions.TriggerCallback('qb-jewelery:server:IsLaptopBusy', function(isBusy)
+    	QBCore.Functions.TriggerCallback('qb-jewerly:server:get:checklaptop', function(HasItems)
+    		if HasItems then
+                if not isBusy then
+                TriggerServerEvent('QBCore:Server:RemoveItem', "purpledongleempty", 1)
+				QBCore.Functions.Progressbar("pickup_sla", "Inserting", 3000, false, true, {
+					disableMovement = true,
+					disableCarMovement = true,
+					disableMouse = false,
+					disableCombat = true,
+				}, {
+					animDict = "mp_common",
+					anim = "givetake1_a",
+					flags = 8,
+                }, {}, {}, function() -- Done
+                    exports["memorygame"]:thermiteminigame(12, 3, 5, 13,
+                    function() -- Success
+                        TriggerServerEvent('nui_doorlock:server:updateState', 9, false, false, false, true)
+                        if math.random(1, 100) <= 35 then
+                         TriggerServerEvent('qb-hud:server:GainStress', math.random(5, 8))
+                        end
+                         QBCore.Functions.Notify("Hack Successful Inserting USB", "success")
+                         local ped = PlayerPedId()
+                         local pos = GetEntityCoords(ped)
+                         local s1, s2 = GetStreetNameAtCoord(pos.x, pos.y, pos.z, Citizen.PointerValueInt(), Citizen.PointerValueInt())
+                         local street1 = GetStreetNameFromHashKey(s1)
+                         local street2 = GetStreetNameFromHashKey(s2)
+                         local streetLabel = street1
+                         if street2 ~= nil then 
+                             streetLabel = streetLabel .. " " .. street2
+                         end
+                         TriggerServerEvent("qb-Jewelry:server:callCops", "Chopshop", 0, streetLabel, pos)
+                         -- Vangelico911Call()
+                         firstAlarm = true
+                         print("success")
+                         copsCalled = true
+                         TriggerServerEvent('qb-jewelery:server:SetLaptopHack')
+                         Wait(5000)
+                         QBCore.Functions.Notify("Vangelico Jewelery Data Collected", "success")
+                         TriggerServerEvent('QBCore:Server:AddItem', "purpledongledata", 1)
+                         TriggerEvent("inventory:client:ItemBox", QBCore.Shared.Items["purpledongledata"], "add")
+                    end,
+                    function() -- Failure
+                        if math.random(1, 100) <= 75 then
+                            TriggerServerEvent('qb-hud:server:GainStress', math.random(8, 15))
+                        end
+                        QBCore.Functions.Notify("You failed!")
+                    end)
+				end, function() --canccel
+					QBCore.Functions.Notify("Cancelled..", "error")
+				end)
+            else
+                QBCore.Functions.Notify("Data Already Collected", "error", 4500) 
+            end
+			else
+   				QBCore.Functions.Notify("Missing Something", "error")
+			end
+		end)
+    end)
+end)
+
+    RegisterNetEvent('qb-Jewelry:client:callCops911')
+    AddEventHandler('qb-Jewelry:client:callCops911', function(type, key, streetLabel, coords)
+        if PlayerJob.name == "police" and onDuty then
+            local bank = "Vehicle Robbery"
+            if type == "Chopshop" then
+                local pos = GetEntityCoords(PlayerPedId())
+                local s1, s2 = Citizen.InvokeNative(0x2EB41072B4C1E4C0, pos.x, pos.y, pos.z, Citizen.PointerValueInt(),
+                    Citizen.PointerValueInt())
+                local street1 = GetStreetNameFromHashKey(s1)
+                local street2 = GetStreetNameFromHashKey(s2)
+                local streetLabel = street1
+                if street2 ~= nil then
+                    streetLabel = streetLabel .. " " .. street2
+                end
+                local data = {
+                    displayCode = '10-31',
+                    description = 'Robbery | CAM: 32, 33, 34, 35 ',
+                    isImportant = 1,
+                    recipientList = {'police'}, 
+                    info = 'Vangelico Jewelry Store',
+                    length = '15000',
+                    infoM = 'fa-car',
+                    -- info = PlayerJob.label
+                }
+            
+                local dispatchData = {
+                    dispatchData = data,
+                    caller = 'Alarm', 
+                    coords = pos,
+                }
+                TriggerServerEvent('wf-alerts:svNotify', dispatchData)
+    
+                local transG = 250
+                local blip = AddBlipForCoord(coords.x, coords.y, coords.z)
+                SetBlipSprite(blip, 674)
+                SetBlipColour(blip, 3)
+                SetBlipDisplay(blip, 4)
+                SetBlipAlpha(blip, transG)
+                SetBlipScale(blip, 1.0)
+                SetBlipFlashes(blip, false)
+                SetBlipAsShortRange(blip, false)
+                BeginTextCommandSetBlipName('STRING')
+                AddTextComponentString("911: Vehicle Robbery")
+                EndTextCommandSetBlipName(blip)
+                
+                while transG ~= 0 do
+                    Wait(180 * 4)
+                    transG = transG - 1
+                    SetBlipAlpha(blip, transG)
+                    if transG == 0 then
+                        SetBlipSprite(blip, 2)
+                        RemoveBlip(blip)
+                        return
+                    end
+                end
+            end
+        end
+    end)
+
+RegisterNetEvent("qb-jewerly:ATMRobbery")
+AddEventHandler("qb-jewerly:ATMRobbery", function()
+    QBCore.Functions.TriggerCallback('qb-jewelery:server:IsATMBusy', function(isBusy)
+    	QBCore.Functions.TriggerCallback('qb-jewerly:server:get:checkatm', function(HasItems)
+    		if HasItems then
+                if not isBusy then
+                TriggerServerEvent('QBCore:Server:RemoveItem', "thermite", 1)
+				QBCore.Functions.Progressbar("pickup_sla", "Placing Device", 10000, false, true, {
+					disableMovement = true,
+					disableCarMovement = true,
+					disableMouse = false,
+					disableCombat = true,
+				}, {
+					animDict = "anim@heists@ornate_bank@thermal_charge",
+					anim = "thermal_charge",
+					flags = 49,
+				}, {}, {}, function() -- Done
+                    exports['varhack']:OpenHackingGame(function(success)
+                        if success then
+                            if math.random(1, 100) <= 35 then
+                             TriggerServerEvent('qb-hud:server:GainStress', math.random(5, 8))
+                            end
+                             QBCore.Functions.Notify("Hack Successful", "success")
+                        -- Vangelico911Call()
+                        TriggerServerEvent('qb-jewelery:server:SetATMHack')
+                        TriggerServerEvent('QBCore:Server:AddItem', "markedbills", Config.ATMRobberyReward)
+                        TriggerEvent("inventory:client:ItemBox", QBCore.Shared.Items["markedbills"], "add")
+                        local luck = math.random(1, 15)
+                        local chance = math.random(1, 15)
+                        if luck == chance then
+                        TriggerServerEvent('QBCore:Server:AddItem', "usb_green", 1)
+                        TriggerEvent("inventory:client:ItemBox", QBCore.Shared.Items["usb_green"], "add") 
+                        end
+                        else
+                            if math.random(1, 100) <= 75 then
+                                TriggerServerEvent('qb-hud:server:GainStress', math.random(8, 15))
+                            end
+                            QBCore.Functions.Notify("You failed!")
+                        end
+                    end, 5, 5)
+				end, function() --canccel
+					QBCore.Functions.Notify("Cancelled..", "error")
+				end)
+            else
+                QBCore.Functions.Notify("Security Lock Active", "error", 4500) 
+            end
+			else
+   				QBCore.Functions.Notify("Missing Something", "error")
+			end
+		end)
+    end)
 end)
