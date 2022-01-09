@@ -15,8 +15,8 @@ RegisterServerEvent('qb-jewellery:server:vitrineReward')
 AddEventHandler('qb-jewellery:server:vitrineReward', function()
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
-    local otherchance = math.random(1, 20)
-    local odd = math.random(1, 20)
+    local otherchance = math.random(1, 25)
+    local odd = math.random(1, 25)
 
     if otherchance == odd then
         local item = math.random(1, #Config.VitrineRewards)
@@ -27,7 +27,7 @@ AddEventHandler('qb-jewellery:server:vitrineReward', function()
             TriggerClientEvent('QBCore:Notify', src, 'You have to much in your pocket', 'error')
         end
     else
-        local amount = math.random(5, 8)
+        local amount = math.random(4, 6)
         if Player.Functions.AddItem("rolex", amount) then
             TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items["rolex"], 'add')
         else
