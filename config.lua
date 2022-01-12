@@ -3,7 +3,7 @@ Config = Config or {}
 Config.Timeout = 60 * (60 * 2000)
 Config.Keycard = 45 * (60 * 2000)
 Config.ATMRobbery = 20000
-Config.ATMRobberyReward = math.random(8, 12)
+Config.ATMRobberyReward = math.random(30, 35)
 Config.RequiredCops = 0
 
 Config.JewelleryLocation = {
